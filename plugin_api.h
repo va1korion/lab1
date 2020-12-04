@@ -24,7 +24,7 @@ struct plugin_info {
     size_t sup_opts_len;
 
     /* Список опций, поддерживаемых плагином */
-    struct plugin_option *sup_opts[];
+    struct plugin_option *sup_opts;
 };
 
 /*

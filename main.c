@@ -23,7 +23,7 @@ char **fnames_ans;
 
 //function that adds name of the plugin, so we can find it in getopt
 struct option* add_plugin_option(struct option *longoptions, int *len, struct plugin_info *pluginInfo){
-    longoptions[*len].name = pluginInfo->sup_opts[0]->opt.name;       //shitty code, yet should work just fine
+    longoptions[*len].name = pluginInfo->sup_opts->opt.name;       //shitty code, yet should work just fine
     longoptions[*len].has_arg = required_argument;
     longoptions[*len].flag = malloc(BUFFSIZE);
     *longoptions[*len].flag = 0;
@@ -134,9 +134,9 @@ int main(int argc, char** argv) {
     struct plugin_info **ppi = malloc(sizeof(struct plugin_info*) * MAX_PLUGINS);
     for (int i = 0; i < MAX_PLUGINS; i++){
         ppi[i] = malloc(sizeof(struct plugin_info));
-        ppi[i]->sup_opts[0] = malloc(sizeof(struct plugin_option));
-        ppi[i]->sup_opts[0]->opt.name = malloc(BUFFSIZE);
-        ppi[i]->sup_opts[0]->opt_descr = malloc(BUFFSIZE);
+        ppi[i]->sup_opts = malloc(sizeof(struct plugin_option));
+        ppi[i]->sup_opts->opt.name = malloc(BUFFSIZE);
+        ppi[i]->sup_opts->opt_descr = malloc(BUFFSIZE);
     }
     int c = 0, longoption_len = SHORT_OPTS, error = 0, handle_len = 0;
     char *search_dir_name, *plugin_dir_name;
@@ -304,7 +304,7 @@ int main(int argc, char** argv) {
                 fprintf(log, "searching for get_info in .so: %s \n", fullname);
                 fflush(log);
                 error = get_info(ppi[handle_len-1]);
-                fprintf(log, "Adding a search option %s ... Return code: %i \n", ppi[handle_len-1]->sup_opts[0]->opt.name, error);
+                fprintf(log, "Adding a search option %s ... Return code: %i \n", ppi[handle_len-1]->sup_opts->opt.name, error);
                 fflush(log);
 
                 longoptions = add_plugin_option(longoptions, &longoption_len, ppi[handle_len-1]);
@@ -418,7 +418,7 @@ int main(int argc, char** argv) {
     closedir(plugin_dir);
     closedir(search_dir);
     for (int i = 0; i < MAX_PLUGINS; i++){
-        free(ppi[i]->sup_opts[0]);
+        free(ppi[i]->sup_opts);
         free(ppi[i]);
     }
     free(ppi);
