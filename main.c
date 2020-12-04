@@ -23,7 +23,7 @@ char **fnames_ans;
 
 //function that adds name of the plugin, so we can find it in getopt
 struct option* add_plugin_option(struct option *longoptions, int *len, struct plugin_info *pluginInfo){
-    longoptions[*len].name = pluginInfo->plugin_name;       //shitty code, yet should work just fine
+    longoptions[*len].name = pluginInfo->sup_opts[0]->opt.name;       //shitty code, yet should work just fine
     longoptions[*len].has_arg = required_argument;
     longoptions[*len].flag = malloc(BUFFSIZE);
     *longoptions[*len].flag = 0;
@@ -90,8 +90,6 @@ int process_dir(char* dir, int (**pp_file)(const char *,
                         found += 1;
                         fnames_ans[ans_len - 1] = malloc(strlen(fullname));
                         strcpy(fnames_ans[ans_len - 1], fullname);
-                        fprintf(log, "found\n");
-                        fflush(log);
                     }
 
                 }else{
@@ -176,7 +174,6 @@ int main(int argc, char** argv) {
 
     opterr = 0;
     DIR* plugin_dir = opendir(plugin_dir_name);
-    /*
     do{
         local_dirent = readdir(plugin_dir);
         if (local_dirent == NULL){
@@ -186,6 +183,7 @@ int main(int argc, char** argv) {
         if (local_dirent->d_type == DT_REG){
             if (strstr(local_dirent->d_name, ".so") != NULL){
                 char *fullname = malloc(PATH_MAX);
+                strcpy(fullname, "");
                 strcat(fullname, plugin_dir_name);
                 strcat(fullname, "/");
                 strcat(fullname, local_dirent->d_name);
@@ -194,6 +192,7 @@ int main(int argc, char** argv) {
                 handle[handle_len] = dlopen(fullname, RTLD_LAZY);
 
                 if(handle[handle_len] == NULL){
+
                     free(fullname);
                     continue;
                 }
@@ -201,26 +200,32 @@ int main(int argc, char** argv) {
                 get_info = (int (*)(struct plugin_info *)) dlsym(handle[handle_len], "plugin_get_info");
 
                 if (!get_info){
-                    dlclose(handle[handle_len]);
                     free(fullname);
                     continue;
                 }
                 handle_len++;
+
                 error = get_info(ppi[handle_len-1]);
 
 
-                longoptions = add_plugin_option(longoptions, &longoption_len, ppi, handle_len-1);
+                longoptions = add_plugin_option(longoptions, &longoption_len, ppi[handle_len-1]);
+
                 free(fullname);
             }
         }
     }
     while (local_dirent != NULL);
-*/
     search_dir_name = argv[argc-1];
     DIR* search_dir = opendir(search_dir_name);
     if(search_dir == NULL){
+        printf("Version: %s  What help do you hope to get? \n"
+               "This program looks for plugins in cwd (also in directory specified in -P argument) \n"
+               "Only single-option plugins are currently supported \n"
+               "Then it recursively processes all the files in a directory specified in a last argument \n"
+               "*This directory MUST be specified as the LAST argument\n", version);
         fprintf(stderr, "Could not open directory %s \n", search_dir_name);
         fflush(stderr);
+        exit(0);
     }
 
     //looking for plugins
@@ -238,7 +243,11 @@ int main(int argc, char** argv) {
             break;
         }
         if (strcmp(longoptions[option_index].name, "h") == 0){
-            printf("Version: %s \n What help do you hope to get? \n", version);
+            printf("Version: %s What help do you hope to get? \n"
+                   "This program looks for plugins in cwd (also in directory specified in -P argument) \n"
+                   "Only single-option plugins are currently supported \n"
+                   "Then it recursively processes all the files in a directory specified in a last argument \n"
+                   "*This directory must be specified", version);
             exit(0);
         }
         if (strcmp(longoptions[option_index].name, "l") == 0){
