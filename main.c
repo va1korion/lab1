@@ -41,7 +41,7 @@ int process_dir(char* dir, int (**pp_file)(const char *,
                                   struct option *[],
                                   size_t,
                                   char *,
-                                  size_t), struct option **in_opts, FILE* log){
+                                  size_t), struct option *in_opts[], FILE* log){
     struct dirent *local_dirent;
     char *err_buff = malloc(out_buff_len);
     DIR* current_dir = opendir(dir);
@@ -62,12 +62,19 @@ int process_dir(char* dir, int (**pp_file)(const char *,
             //magic happens here
 
             for (int i = 0; i < MAX_PLUGINS; i++) {
-                fprintf(log, "Processing file: %s (run %s)\n", fullname, in_opts[i]->name);
-                fflush(log);
-                if ((pp_file[i] == NULL) || (in_opts[i] == NULL))
-                    continue;
 
-                int x = pp_file[i](fullname, &in_opts[i], 1, err_buff, out_buff_len);
+                if ((pp_file[i] == NULL) || (in_opts[i] == NULL)) {
+                    continue;
+                }
+                fprintf(log, "Processing file: %s (run %s) \n", fullname, in_opts[0][i].name);
+                fflush(log);
+
+
+                // I am deeply ashamed of theese
+                void *poi = &in_opts[0][i];
+                int x = (*pp_file[i])(fullname, &poi, 1, err_buff, out_buff_len);
+
+
                 if (x == -1){
                     fprintf(log, "Plugin has returned: %s \n", err_buff);
                     fflush(log);
@@ -76,15 +83,12 @@ int process_dir(char* dir, int (**pp_file)(const char *,
 
                 if (x ^ negative){
                     //((x && !negative) || (!x && negative)){
-                    fprintf(log, "Criteria %s found in %s \n", in_opts[i]->name, fullname);
+                    fprintf(log, "Criteria %s found in %s \n", in_opts[0][i].name, fullname);
                     fflush(log);
                     if (!found) {            //if it's the first plugin running for that file
-                        fprintf(log, "found\n");
-                        fflush(log);
                         ans_len += 1;
                         found += 1;
                         fnames_ans[ans_len - 1] = malloc(strlen(fullname));
-
                         strcpy(fnames_ans[ans_len - 1], fullname);
                         fprintf(log, "found\n");
                         fflush(log);
@@ -92,21 +96,19 @@ int process_dir(char* dir, int (**pp_file)(const char *,
 
                 }else{
                     if (found && (condition == COND_AND)) {
-                        fprintf(log, "Criteria\n");
-                        fflush(log);
-
                         free(fnames_ans[ans_len - 1]);
                         ans_len -= 1;
                         break;
                     }
                     if (condition == COND_AND){
-                        fprintf(log, "Criteria %s not found in %s \n", in_opts[i]->name, fullname);
+                        fprintf(log, "Criteria %s not found in %s \n", in_opts[0][i].name, fullname);
                         break;
                     }
                 }
 
-                free(fullname);
+
             }
+            free(fullname);
 
         }
         if (local_dirent->d_type == DT_DIR) {
@@ -365,24 +367,21 @@ int main(int argc, char** argv) {
 
     int x = 0;
     int (**process_file)() = malloc(MAX_PLUGINS* sizeof(void*));
-    for(int i = 0; i < handle_len; i++){
+    for(int i = 0; i < MAX_PLUGINS; i++){
         process_file[i] = NULL;
     }
 
     //dlsyming pp_file from plugins
-    for(int i = 0; i < handle_len; i++){
+    for(int i = 0; i < handle_len; i++){   //if we have anything to search for we are looking for something to look with
         if(*longoptions[SHORT_OPTS + i].flag != 0)
         {
-
             fprintf(log, "Hello there %s \n", longoptions[SHORT_OPTS + i].name);
             fflush(log);
             process_file[i] = (int (*)()) dlsym(handle[i], "plugin_process_file");
+
         }
     }
-    /*for(int i = handle_len; i < MAX_PLUGINS; i++){
-        if(*longoptions[SHORT_OPTS + i].flag == 0)
-            process_file[i] = NULL;
-    }*/
+
     ans_len = 0;
     fnames_ans = malloc(MAX_FILES * sizeof(char*));
 

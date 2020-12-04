@@ -24,6 +24,7 @@ int plugin_process_file(const char *fname,
                         char *out_buff,
                         size_t out_buff_len){
     char *ip_string = (char*)in_opts[0]->flag;
+
     int scan_res = 1, errno = 0;
     unsigned int a[4];
     off_t file_offset = 0, fsize;
@@ -36,10 +37,8 @@ int plugin_process_file(const char *fname,
         strcpy(out_buff, "That is not an IP-address");
         return -1;
     }
-
     void *start = malloc(PAGE);
-    //fprintf(stdout, "here we go \n");
-    //fflush(stdout);
+
     int fd = open(fname, 0);
     unsigned int ip_le = (a[0] << 24)+(a[1] << 16)+(a[2] << 8)+(a[3]),
                  ip_be = (a[3] << 24)+(a[2] << 16)+(a[1] << 8)+(a[0]);
