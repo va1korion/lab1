@@ -134,9 +134,6 @@ int main(int argc, char** argv) {
     struct plugin_info **ppi = malloc(sizeof(struct plugin_info*) * MAX_PLUGINS);
     for (int i = 0; i < MAX_PLUGINS; i++){
         ppi[i] = malloc(sizeof(struct plugin_info));
-        ppi[i]->sup_opts = malloc(sizeof(struct plugin_option));
-        ppi[i]->sup_opts->opt.name = malloc(BUFFSIZE);
-        ppi[i]->sup_opts->opt_descr = malloc(BUFFSIZE);
     }
     int c = 0, longoption_len = SHORT_OPTS, error = 0, handle_len = 0;
     char *search_dir_name, *plugin_dir_name;
@@ -232,28 +229,29 @@ int main(int argc, char** argv) {
     while (c != -1) {
         c = getopt_long_only(argc, argv, "-P:C:l:Nvh",
                              longoptions, &option_index);
-        if (strcmp(longoptions[option_index].name, "v") == 0){  //TODO negative option
-            printf("Version: %s \n", version);
-            exit(0);
-        }
 
-        if (strcmp(longoptions[option_index].name, "P") == 0){
-            plugin_dir_name = optarg;
-            argv[optind-1] = "0";
-            break;
-        }
-        if (strcmp(longoptions[option_index].name, "h") == 0){
-            printf("Version: %s What help do you hope to get? \n"
+        switch (c) {
+            case 'v':
+                printf("Version: %s \n", version);
+                exit(0);
+            case 'P':
+                plugin_dir_name = optarg;
+                argv[optind-1] = "0";
+                break;
+            case 'h':
+                printf("Version: %s What help do you hope to get? \n"
                    "This program looks for plugins in cwd (also in directory specified in -P argument) \n"
                    "Only single-option plugins are currently supported \n"
                    "Then it recursively processes all the files in a directory specified in a last argument \n"
                    "*This directory must be specified", version);
-            exit(0);
-        }
-        if (strcmp(longoptions[option_index].name, "l") == 0){
-            log_file_name = optarg;
-            argv[optind-1] = "0";
-            break;
+                exit(0);
+
+            case 'l':
+                log_file_name = optarg;
+                argv[optind-1] = "0";
+                break;
+            default:
+                continue;
         }
     }
 
@@ -332,25 +330,18 @@ int main(int argc, char** argv) {
             break;
 
         switch (c) {
-            case 0:
-                if (strcmp(longoptions[option_index].name, "v") == 0){
-                    printf("Version: %s \n", version);
-                    exit(0);
-                }
-                if (strcmp(longoptions[option_index].name, "C") == 0){
-                    fprintf(log, "option C with value '%s'\n", optarg);
-                    if (strcmp(optarg, "AND") == 0)
-                        continue;
-                    else if (strcmp(optarg, "OR") == 0)
+            case 'C':
+                fprintf(log, "option C with value '%s'\n", optarg);
+                if (strcmp(optarg, "AND") == 0)
+                    continue;
+                else if (strcmp(optarg, "OR") == 0)
                         condition = COND_OR;
-                    else fprintf(stderr, "Option -C invoked with wrong arguments. Only \"AND\" and \"OR\" are supported\n");
-                    continue;
-                }
-                if (strcmp(longoptions[option_index].name, "N") == 0){
-                    fprintf(log, "Negative option detected \n");
-                    negative = 1;
-                    continue;
-                }
+                else fprintf(stderr, "Option -C invoked with wrong arguments. Only \"AND\" and \"OR\" are supported\n");
+                continue;
+            case 'N':
+                fprintf(log, "Negative option detected \n");
+                negative = 1;
+                continue;
             case 2:
                 for(int j = SHORT_OPTS; j < longoption_len; j++)
                 {

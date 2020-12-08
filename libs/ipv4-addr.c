@@ -12,6 +12,7 @@
 int plugin_get_info(struct plugin_info *ppi){
     ppi->plugin_name = "ipv4-addr";
     ppi->sup_opts_len = 1;
+    ppi->sup_opts = malloc(sizeof(struct option));
     ppi->sup_opts->opt.name = "ipv4-addr";
     ppi->sup_opts->opt.has_arg = required_argument;
     ppi->sup_opts->opt_descr = "This option helps us call our plugin and let it do it's dirty job (which is finding ipv4 address in a file)";
