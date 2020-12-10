@@ -60,13 +60,13 @@ int plugin_process_file(const char *fname,
             strncpy(big_buffer+16, (char *) bytes, 16);
             for(int i = 0; i < 16; i++){
                 if (*bytes == ip_le)
-                    return 1;
+                    return 0;
 
                 if (*bytes == ip_be)
-                    return 1;
+                    return 0;
 
                 if (strncmp(big_buffer, ip_string, strlen(ip_string)) == 0) {
-                    return 1;
+                    return 0;
                 }
             }
         }
@@ -78,18 +78,18 @@ int plugin_process_file(const char *fname,
             strncpy(buffer, (char *) bytes, 16);
 
             if (*bytes == ip_le)
-                return 1;
+                return 0;
 
             if (*bytes == ip_be)
-                return 1;
+                return 0;
 
             if (strncmp(buffer, ip_string, strlen(ip_string)) == 0) {
-                return 1;
+                return 0;
             }
         }
         munmap(file_page, PAGE);
         file_offset += PAGE;
     }while(file_offset < fsize);
-
-    return 0;
+    free(start);
+    return 1;
 }

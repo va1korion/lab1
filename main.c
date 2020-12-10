@@ -4,7 +4,7 @@
 #include <dirent.h>
 #include <string.h>
 #include <sys/types.h>
-#include <sys/dirent.h>
+#include <dirent.h>
 #include <dlfcn.h>
 #include <sys/stat.h>
 #include "plugin_api.h"
@@ -80,6 +80,7 @@ int process_dir(char* dir, int (**pp_file)(const char *,
                     fflush(log);
                     continue;
                 }
+                x = !x;
 
                 if (x ^ negative){
                     //((x && !negative) || (!x && negative)){
@@ -342,7 +343,7 @@ int main(int argc, char** argv) {
                 fprintf(log, "Negative option detected \n");
                 negative = 1;
                 continue;
-            case 2:
+            case 0:
                 for(int j = SHORT_OPTS; j < longoption_len; j++)
                 {
                     if (option_index == j)
