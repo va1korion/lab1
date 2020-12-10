@@ -38,16 +38,19 @@ int plugin_process_file(const char *fname,
         strcpy(out_buff, "That is not an IP-address");
         return -1;
     }
-    void *start = malloc(PAGE);
 
-    int fd = open(fname, 0);
+    int fd = open(fname, O_RDONLY);
+    if (fd == -1){
+	sprintf(out_buff, "Could not open file \n");
+	return -1;
+    }
     unsigned int ip_le = (a[0] << 24)+(a[1] << 16)+(a[2] << 8)+(a[3]),
                  ip_be = (a[3] << 24)+(a[2] << 16)+(a[1] << 8)+(a[0]);
     unsigned int *bytes;
     char buffer[16];
     do{
 
-        void *file_page = mmap(start, PAGE, PROT_READ, MAP_FILE | MAP_SHARED, fd, file_offset);
+        void *file_page = mmap(NULL, PAGE, PROT_READ, MAP_FILE | MAP_SHARED, fd, file_offset);
         if (file_page == MAP_FAILED){
             snprintf(out_buff, out_buff_len, "Map failed \n");
             return -1;
@@ -90,6 +93,5 @@ int plugin_process_file(const char *fname,
         munmap(file_page, PAGE);
         file_offset += PAGE;
     }while(file_offset < fsize);
-    free(start);
     return 1;
 }
