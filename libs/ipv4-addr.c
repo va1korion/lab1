@@ -41,8 +41,8 @@ int plugin_process_file(const char *fname,
 
     int fd = open(fname, O_RDONLY);
     if (fd == -1){
-	sprintf(out_buff, "Could not open file \n");
-	return -1;
+	    sprintf(out_buff, "Could not open file \n");
+	    return -1;
     }
     unsigned int ip_le = (a[0] << 24)+(a[1] << 16)+(a[2] << 8)+(a[3]),
                  ip_be = (a[3] << 24)+(a[2] << 16)+(a[1] << 8)+(a[0]);
@@ -62,13 +62,17 @@ int plugin_process_file(const char *fname,
             bytes = (unsigned int *)((char *)file_page);
             strncpy(big_buffer+16, (char *) bytes, 16);
             for(int i = 0; i < 16; i++){
-                if (*bytes == ip_le)
+                if (*bytes == ip_le){
+                    munmap(file_page, PAGE);
                     return 0;
+                }
 
-                if (*bytes == ip_be)
+                if (*bytes == ip_be) {
+                    munmap(file_page, PAGE);
                     return 0;
-
+                }
                 if (strncmp(big_buffer, ip_string, strlen(ip_string)) == 0) {
+                    munmap(file_page, PAGE);
                     return 0;
                 }
             }
@@ -80,13 +84,18 @@ int plugin_process_file(const char *fname,
 
             strncpy(buffer, (char *) bytes, 16);
 
-            if (*bytes == ip_le)
+            if (*bytes == ip_le) {
+                munmap(file_page, PAGE);
                 return 0;
+            }
+            if (*bytes == ip_be){
+                munmap(file_page, PAGE);
+                return 0;
+            }
 
-            if (*bytes == ip_be)
-                return 0;
 
             if (strncmp(buffer, ip_string, strlen(ip_string)) == 0) {
+                munmap(file_page, PAGE);
                 return 0;
             }
         }
