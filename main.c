@@ -75,7 +75,7 @@ int process_dir(char* dir, int (**pp_file)(const char *,
                 int x = (*pp_file[i])(fullname, &poi, 1, err_buff, out_buff_len);
 
 
-                if (x == -1){
+                if (x <= -1){
                     fprintf(log, "Plugin has returned: %s \n", err_buff);
                     fflush(log);
                     continue;
@@ -186,6 +186,8 @@ int main(int argc, char** argv) {
                 strcat(fullname, "/");
                 strcat(fullname, local_dirent->d_name);
                 //fullname = realpath(fullname, NULL);
+                fprintf(stderr, "processing .so: %s \n", fullname);
+                fflush(stderr);
 
                 handle[handle_len] = dlopen(fullname, RTLD_LAZY);
 
@@ -207,14 +209,20 @@ int main(int argc, char** argv) {
 
 
                 longoptions = add_plugin_option(longoptions, &longoption_len, ppi[handle_len-1]);
+                fprintf(stderr, "Added a search option %s \n", longoptions[longoption_len-1].name);
+                fflush(stderr);
 
                 free(fullname);
             }
         }
     }
     while (local_dirent != NULL);
+
+
     search_dir_name = argv[argc-1];
     DIR* search_dir = opendir(search_dir_name);
+
+
     if(search_dir == NULL){
         printf("Version: %s  What help do you hope to get? \n"
                "This program looks for plugins in cwd (also in directory specified in -P argument) \n"
@@ -303,12 +311,15 @@ int main(int argc, char** argv) {
                 fprintf(log, "searching for get_info in .so: %s \n", fullname);
                 fflush(log);
                 error = get_info(ppi[handle_len-1]);
-                fprintf(log, "Adding a search option %s ... Return code: %i \n", ppi[handle_len-1]->sup_opts->opt.name, error);
-                fflush(log);
 
-                longoptions = add_plugin_option(longoptions, &longoption_len, ppi[handle_len-1]);
-                fprintf(log, "Added a search option %s \n", longoptions[longoption_len-1].name);
-                fflush(log);
+
+                for(int i; i < ppi[handle_len-1]->sup_opts_len; i++){
+                    fprintf(log, "Adding a search option %s ... Return code: %i \n", ppi[handle_len-1]->sup_opts->opt.name, error);
+                    fflush(log);
+                    longoptions = add_plugin_option(longoptions, &longoption_len, ppi[handle_len-1]);
+                    fprintf(log, "Added a search option %s \n", longoptions[longoption_len-1].name);
+                    fflush(log);
+                }
                 free(fullname);
             }
         }
