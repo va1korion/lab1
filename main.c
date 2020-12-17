@@ -29,6 +29,7 @@ struct option* add_plugin_option(struct option *longoptions, int *len, struct pl
     *longoptions[*len].flag = 0;
     longoptions[*len].val = 2;
     *len += 1;
+    longoptions = realloc(longoptions, *len*sizeof(struct option));
     longoptions[*len].name = 0;
     longoptions[*len].has_arg = 0;
     longoptions[*len].flag = 0;
@@ -41,7 +42,7 @@ int process_dir(char* dir, int (**pp_file)(const char *,
                                   struct option *[],
                                   size_t,
                                   char *,
-                                  size_t), struct option *in_opts[], FILE* log){
+                                  size_t), struct option *in_opts[], FILE* log, int handle_len){
     struct dirent *local_dirent;
     char *err_buff = malloc(out_buff_len);
     DIR* current_dir = opendir(dir);
@@ -61,7 +62,7 @@ int process_dir(char* dir, int (**pp_file)(const char *,
             int found = 0;
             //magic happens here
 
-            for (int i = 0; i < MAX_PLUGINS; i++) {
+            for (int i = 0; i < handle_len; i++) {
 
                 if ((pp_file[i] == NULL) || (in_opts[i] == NULL)) {
                     continue;
@@ -72,7 +73,7 @@ int process_dir(char* dir, int (**pp_file)(const char *,
 
                 // I am deeply ashamed of theese
                 void *poi = &in_opts[0][i];
-                int x = (*pp_file[i])(fullname, &poi, 1, err_buff, out_buff_len);
+                int x = (*pp_file[i])(fullname, (struct option **)&poi, 1, err_buff, out_buff_len);
 
 
                 if (x <= -1){
@@ -114,7 +115,7 @@ int process_dir(char* dir, int (**pp_file)(const char *,
             if ((strcmp(local_dirent->d_name, ".") == 0) || (strcmp(local_dirent->d_name, "..") == 0)){
                 continue;
             }
-            process_dir(fullname, pp_file, in_opts, log);
+            process_dir(fullname, pp_file, in_opts, log, handle_len);
             free(fullname);
         }
 
@@ -143,7 +144,7 @@ int main(int argc, char** argv) {
     condition = COND_AND;
     plugin_dir_name = ".";
 
-    struct option *longoptions = malloc(sizeof(struct option) * (SHORT_OPTS + MAX_PLUGINS));
+    struct option *longoptions = malloc(sizeof(struct option) * (SHORT_OPTS));
 
 
     longoptions[0].name = "C";
@@ -168,7 +169,7 @@ int main(int argc, char** argv) {
     longoptions[longoption_len].name = 0;
     longoptions[longoption_len].has_arg = 0;
 
-
+    FILE* log = stderr;
 
     opterr = 0;
     DIR* plugin_dir = opendir(plugin_dir_name);
@@ -186,8 +187,8 @@ int main(int argc, char** argv) {
                 strcat(fullname, "/");
                 strcat(fullname, local_dirent->d_name);
                 //fullname = realpath(fullname, NULL);
-                fprintf(stderr, "processing .so: %s \n", fullname);
-                fflush(stderr);
+                fprintf(log, "processing .so: %s \n", fullname);
+                fflush(log);
 
                 handle[handle_len] = dlopen(fullname, RTLD_LAZY);
 
@@ -207,11 +208,13 @@ int main(int argc, char** argv) {
 
                 error = get_info(ppi[handle_len-1]);
 
-
-                longoptions = add_plugin_option(longoptions, &longoption_len, ppi[handle_len-1]);
-                fprintf(stderr, "Added a search option %s \n", longoptions[longoption_len-1].name);
-                fflush(stderr);
-
+                for(int i; i < ppi[handle_len-1]->sup_opts_len; i++){
+                    fprintf(log, "Adding a search option %s ... Return code: %i \n", ppi[handle_len-1]->sup_opts->opt.name, error);
+                    fflush(log);
+                    longoptions = add_plugin_option(longoptions, &longoption_len, ppi[handle_len-1]);
+                    fprintf(log, "Added a search option %s \n", longoptions[longoption_len-1].name);
+                    fflush(log);
+                }
                 free(fullname);
             }
         }
@@ -224,13 +227,13 @@ int main(int argc, char** argv) {
 
 
     if(search_dir == NULL){
-        printf("Version: %s  What help do you hope to get? \n"
+        fprintf(log, "Version: %s  What help do you hope to get? \n"
                "This program looks for plugins in cwd (also in directory specified in -P argument) \n"
                "Only single-option plugins are currently supported \n"
                "Then it recursively processes all the files in a directory specified in a last argument \n"
                "*This directory MUST be specified as the LAST argument\n", version);
-        fprintf(stderr, "Could not open directory %s \n", search_dir_name);
-        fflush(stderr);
+        fprintf(log, "Could not open directory %s \n", search_dir_name);
+        fflush(log);
         exit(0);
     }
 
@@ -252,7 +255,7 @@ int main(int argc, char** argv) {
                    "This program looks for plugins in cwd (also in directory specified in -P argument) \n"
                    "Only single-option plugins are currently supported \n"
                    "Then it recursively processes all the files in a directory specified in a last argument \n"
-                   "*This directory must be specified", version);
+                   "*This directory must be specified as the LAST argument", version);
                 exit(0);
 
             case 'l':
@@ -264,7 +267,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    FILE* log = fopen(log_file_name, "w");
+    log = fopen(log_file_name, "w");
     plugin_dir = opendir(plugin_dir_name);
 
     if(plugin_dir) {
@@ -398,7 +401,7 @@ int main(int argc, char** argv) {
     fnames_ans = malloc(MAX_FILES * sizeof(char*));
 
     longoptions = longoptions+SHORT_OPTS;
-    error = process_dir(search_dir_name, process_file, &longoptions, log);
+    error = process_dir(search_dir_name, process_file, &longoptions, log, handle_len);
 
 
 
