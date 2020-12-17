@@ -22,9 +22,9 @@ static int out_buff_len = BUFFSIZE, ans_len = 0, negative = 0, condition = COND_
 char **fnames_ans;
 
 //function that adds name of the plugin, so we can find it in getopt
-struct option* add_plugin_option(struct option *longoptions, int *len, struct plugin_info *pluginInfo){
-    longoptions[*len].name = pluginInfo->sup_opts->opt.name;       //shitty code, yet should work just fine
-    longoptions[*len].has_arg = required_argument;
+struct option* add_plugin_option(struct option *longoptions, int *len, struct plugin_info *pluginInfo, int j){
+    longoptions[*len].name = pluginInfo->sup_opts[j].opt.name;       //shitty code, yet should work just fine
+    longoptions[*len].has_arg = pluginInfo->sup_opts[j].opt.has_arg;
     longoptions[*len].flag = malloc(BUFFSIZE);
     *longoptions[*len].flag = 0;
     longoptions[*len].val = 2;
@@ -79,7 +79,7 @@ int process_dir(char* dir, int (**pp_file)(const char *,
                 if (x <= -1){
                     fprintf(log, "Plugin has returned: %s \n", err_buff);
                     fflush(log);
-                    continue;
+                 
                 }
                 x = !x;
 
@@ -210,10 +210,10 @@ int main(int argc, char** argv) {
 
                 error = get_info(ppi[handle_len-1]);
 
-                for(int i; i < ppi[handle_len-1]->sup_opts_len; i++){
-                    fprintf(log, "Adding a search option %s ... Return code: %i \n", ppi[handle_len-1]->sup_opts->opt.name, error);
+                for(int i = 0; i < ppi[handle_len-1]->sup_opts_len; i++){
+                    fprintf(log, "Adding a search option %s ... Return code: %i \n", ppi[handle_len-1]->sup_opts[i].opt.name, error);
                     fflush(log);
-                    longoptions = add_plugin_option(longoptions, &longoption_len, ppi[handle_len-1]);
+                    longoptions = add_plugin_option(longoptions, &longoption_len, ppi[handle_len-1], i);
                     fprintf(log, "Added a search option %s \n", longoptions[longoption_len-1].name);
                     fflush(log);
                 }
@@ -319,9 +319,9 @@ int main(int argc, char** argv) {
 
 
                 for(int i = 0; i < ppi[handle_len-1]->sup_opts_len; i++){
-                    fprintf(log, "Adding a search option %s ... Return code: %i \n", ppi[handle_len-1]->sup_opts->opt.name, error);
+                    fprintf(log, "Adding a search option %s ... Return code: %i \n", ppi[handle_len-1]->sup_opts[i].opt.name, error);
                     fflush(log);
-                    longoptions = add_plugin_option(longoptions, &longoption_len, ppi[handle_len-1]);
+                    longoptions = add_plugin_option(longoptions, &longoption_len, ppi[handle_len-1], i);
                     fprintf(log, "Added a search option %s \n", longoptions[longoption_len-1].name);
                     fflush(log);
                 }
@@ -388,15 +388,15 @@ int main(int argc, char** argv) {
     for(int i = 0; i < MAX_PLUGINS; i++){
         process_file[i] = NULL;
     }
-
     //dlsyming pp_file from plugins
-    for(int i = 0; i < handle_len; i++){   //if we have anything to search for we are looking for something to look with
+    for(int i = 0; i < handle_len; i++){
+   //if we have anything to search for we are looking for something to look with
         if(*longoptions[SHORT_OPTS + i].flag != 0)
         {
-            fprintf(log, "Hello there %s \n", longoptions[SHORT_OPTS + i].name);
+	  
+            fprintf(log, "Looking for plugin_process_file for %s \n", longoptions[SHORT_OPTS + i].name);
             fflush(log);
             process_file[i] = (int (*)()) dlsym(handle[i], "plugin_process_file");
-
         }
     }
 
