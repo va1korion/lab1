@@ -29,7 +29,7 @@ struct option* add_plugin_option(struct option *longoptions, int *len, struct pl
     *longoptions[*len].flag = 0;
     longoptions[*len].val = 2;
     *len += 1;
-    longoptions = realloc(longoptions, *len*sizeof(struct option));
+    longoptions = realloc(longoptions, (*len+1)*sizeof(struct option));
     longoptions[*len].name = 0;
     longoptions[*len].has_arg = 0;
     longoptions[*len].flag = 0;
@@ -144,7 +144,7 @@ int main(int argc, char** argv) {
     condition = COND_AND;
     plugin_dir_name = ".";
 
-    struct option *longoptions = malloc(sizeof(struct option) * (SHORT_OPTS));
+    struct option *longoptions = malloc(sizeof(struct option) * (SHORT_OPTS+1));
 
 
     longoptions[0].name = "C";
@@ -170,6 +170,8 @@ int main(int argc, char** argv) {
     longoptions[longoption_len].has_arg = 0;
 
     FILE* log = stderr;
+    fprintf(log, "Init complete \n");
+    fflush(log);
 
     opterr = 0;
     DIR* plugin_dir = opendir(plugin_dir_name);
@@ -316,7 +318,7 @@ int main(int argc, char** argv) {
                 error = get_info(ppi[handle_len-1]);
 
 
-                for(int i; i < ppi[handle_len-1]->sup_opts_len; i++){
+                for(int i = 0; i < ppi[handle_len-1]->sup_opts_len; i++){
                     fprintf(log, "Adding a search option %s ... Return code: %i \n", ppi[handle_len-1]->sup_opts->opt.name, error);
                     fflush(log);
                     longoptions = add_plugin_option(longoptions, &longoption_len, ppi[handle_len-1]);
@@ -358,12 +360,13 @@ int main(int argc, char** argv) {
                 negative = 1;
                 continue;
             case 0:
+
                 for(int j = SHORT_OPTS; j < longoption_len; j++)
                 {
                     if (option_index == j)
                     {
                         longoptions[option_index].flag = (int*) optarg;
-                        fprintf(log, "File criteria added %s %s \n",longoptions[option_index].name, optarg);
+                        fprintf(log, "File criteria added %s %s \n", longoptions[option_index].name, optarg);
                         fflush(log);
                         continue;
                     }
