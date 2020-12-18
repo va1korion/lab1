@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < MAX_PLUGINS; i++){
         ppi[i] = malloc(sizeof(struct plugin_info));
     }
-    int c = 0, longoption_len = SHORT_OPTS, error = 0, handle_len = 0;
+    int c = 0, longoption_len = SHORT_OPTS, error = 0, handle_len = 0, help = 0;
     char *search_dir_name, *plugin_dir_name;
     int option_index = 0;
     int (*get_info)(struct plugin_info*);
@@ -257,8 +257,16 @@ int main(int argc, char** argv) {
                    "This program looks for plugins in cwd (also in directory specified in -P argument) \n"
                    "Only single-option plugins are currently supported \n"
                    "Then it recursively processes all the files in a directory specified in a last argument \n"
-                   "*This directory must be specified as the LAST argument", version);
-                exit(0);
+                   "*This directory must be specified as the LAST argument\n\n"
+                   "Options: \n"
+                   "-v also prints out current version \n"
+                   "-P specify plugin directory \n"
+                   "-h print this message \n"
+                   "-N \"NOT\" condition\n"
+                   "-l specify log file path\n"
+                   "-C set \"AND\" and \"OR\" conditions", version);
+                help = 1;
+                break;
 
             case 'l':
                 log_file_name = optarg;
@@ -388,12 +396,17 @@ int main(int argc, char** argv) {
     for(int i = 0; i < MAX_PLUGINS; i++){
         process_file[i] = NULL;
     }
+    if(help){
+        printf("\nPlugin options:\n");
+    }
     //dlsyming pp_file from plugins
     for(int i = 0; i < handle_len; i++){
+        if(help){
+            printf("%s: %s \n", longoptions[SHORT_OPTS + i].name, ppi[i]->sup_opts->opt_descr);
+        }
    //if we have anything to search for we are looking for something to look with
         if(*longoptions[SHORT_OPTS + i].flag != 0)
         {
-	  
             fprintf(log, "Looking for plugin_process_file for %s \n", longoptions[SHORT_OPTS + i].name);
             fflush(log);
             process_file[i] = (int (*)()) dlsym(handle[i], "plugin_process_file");
