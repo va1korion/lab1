@@ -397,7 +397,7 @@ int main(int argc, char** argv) {
         process_file[i] = NULL;
     }
     if(help){
-        printf("\nPlugin options:\n");
+        printf("\n\nPlugin options:\n");
     }
     //dlsyming pp_file from plugins
     for(int i = 0; i < handle_len; i++){
@@ -413,6 +413,9 @@ int main(int argc, char** argv) {
         }
     }
 
+    if(help){
+        printf("\n");
+    }
     ans_len = 0;
     fnames_ans = malloc(MAX_FILES * sizeof(char*));
 
