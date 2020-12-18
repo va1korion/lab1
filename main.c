@@ -400,6 +400,10 @@ int main(int argc, char** argv) {
     for(int i = 0; i < MAX_PLUGINS; i++){
         process_file[i] = NULL;
     }
+    if(!handle_len){
+        printf("\n\nNo plugins found\n");
+        fflush(stdout);
+    }
     if(help){
         printf("\n\nPlugin options:\n");
     }
@@ -430,9 +434,13 @@ int main(int argc, char** argv) {
 
 
     fflush(log);
+    if (!ans_len){
+        printf("No suitable files found \n");
+    }else{
     fprintf(stdout, "Files found: \n");
     for(int j = 0; j < ans_len; j++){
         fprintf(stdout, "%s  \n", fnames_ans[j]);
+    }
     }
 
 
