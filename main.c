@@ -427,10 +427,8 @@ int main(int argc, char** argv) {
 
 
     fflush(log);
-    fprintf(log, "Files found: \n");
     fprintf(stdout, "Files found: \n");
     for(int j = 0; j < ans_len; j++){
-        fprintf(log, "%s  \n", fnames_ans[j]);
         fprintf(stdout, "%s  \n", fnames_ans[j]);
     }
 
