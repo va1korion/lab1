@@ -270,6 +270,7 @@ int main(int argc, char** argv) {
 
             case 'l':
                 log_file_name = optarg;
+                log = fopen(log_file_name, "w");
                 argv[optind-1] = "0";
                 break;
             default:
@@ -277,7 +278,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    log = fopen(log_file_name, "w");
+
     plugin_dir = opendir(plugin_dir_name);
 
     if(plugin_dir) {
