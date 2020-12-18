@@ -326,7 +326,10 @@ int main(int argc, char** argv) {
                 fflush(log);
                 error = get_info(ppi[handle_len-1]);
 
-
+                if (ppi[handle_len-1]->sup_opts_len > 1){
+                    printf("Multiple options in plugin %s, undefined behavior \n", local_dirent->d_name);
+                    fflush(stdout);
+                }
                 for(int i = 0; i < ppi[handle_len-1]->sup_opts_len; i++){
                     fprintf(log, "Adding a search option %s ... Return code: %i \n", ppi[handle_len-1]->sup_opts[i].opt.name, error);
                     fflush(log);
