@@ -222,8 +222,7 @@ int main(int argc, char** argv) {
     while (local_dirent != NULL);
 
 
-    search_dir_name = argv[argc-1];
-    DIR* search_dir = opendir(search_dir_name);
+
 
 
 
@@ -387,8 +386,13 @@ int main(int argc, char** argv) {
             strcpy(search_dir_name, argv[i]);
             break;
         }
-    };
+    }
 
+    if (!search_dir_name){
+        search_dir_name = argv[argc-1];
+    }
+
+    DIR* search_dir = opendir(search_dir_name);
     if(search_dir == NULL){
         fprintf(log, "Version: %s  What help do you hope to get? \n"
                      "This program looks for plugins in cwd (also in directory specified in -P argument) \n"
