@@ -17,7 +17,7 @@
 #define COND_AND 1
 #define COND_OR 0
 
-static const char *version = "0.1";
+static const char *version = "1.0";
 static int out_buff_len = BUFFSIZE, ans_len = 0, negative = 0, condition = COND_AND;
 char **fnames_ans;
 
@@ -170,8 +170,6 @@ int main(int argc, char** argv) {
     longoptions[longoption_len].has_arg = 0;
 
     FILE* log = stderr;
-    fprintf(log, "Init complete \n");
-    fflush(log);
 
     opterr = 0;
     DIR* plugin_dir = opendir(plugin_dir_name);
@@ -228,16 +226,7 @@ int main(int argc, char** argv) {
     DIR* search_dir = opendir(search_dir_name);
 
 
-    if(search_dir == NULL){
-        fprintf(log, "Version: %s  What help do you hope to get? \n"
-               "This program looks for plugins in cwd (also in directory specified in -P argument) \n"
-               "Only single-option plugins are currently supported \n"
-               "Then it recursively processes all the files in a directory specified in a last argument \n"
-               "*This directory MUST be specified as the LAST argument\n", version);
-        fprintf(log, "Could not open directory %s \n", search_dir_name);
-        fflush(log);
-        exit(0);
-    }
+
 
     //looking for plugins
     while (c != -1) {
@@ -278,15 +267,13 @@ int main(int argc, char** argv) {
         }
     }
 
-
     plugin_dir = opendir(plugin_dir_name);
 
     if(plugin_dir) {
         fprintf(log, "opened directory %s \n", plugin_dir_name);
         fflush(log);
     }
-    fprintf(log, "Search dir: %s \n", search_dir_name);
-    fflush(log);
+
     do{
         local_dirent = readdir(plugin_dir);
         if (local_dirent == NULL){
@@ -366,6 +353,7 @@ int main(int argc, char** argv) {
                 else if (strcmp(optarg, "OR") == 0)
                         condition = COND_OR;
                 else fprintf(stderr, "Option -C invoked with wrong arguments. Only \"AND\" and \"OR\" are supported\n");
+                argv[optind-1] = "0";
                 continue;
             case 'N':
                 fprintf(log, "Negative option detected \n");
@@ -380,6 +368,7 @@ int main(int argc, char** argv) {
                         longoptions[option_index].flag = (int*) optarg;
                         fprintf(log, "File criteria added %s %s \n", longoptions[option_index].name, optarg);
                         fflush(log);
+                        argv[optind-1] = "0";
                         continue;
                     }
                 }
@@ -393,7 +382,26 @@ int main(int argc, char** argv) {
         }
     }
 
+    for (int i = 0; i < argc; i++){
+        if(strlen(argv[i]) && argv[i][0] != '-'){
+            strcpy(search_dir_name, argv[i]);
+            break;
+        }
+    };
 
+    if(search_dir == NULL){
+        fprintf(log, "Version: %s  What help do you hope to get? \n"
+                     "This program looks for plugins in cwd (also in directory specified in -P argument) \n"
+                     "Only single-option plugins are currently supported \n"
+                     "Then it recursively processes all the files in a directory specified in a last argument \n"
+                     "*This directory MUST be specified as the LAST argument\n", version);
+        fprintf(log, "\n Could not open directory %s \n", search_dir_name);
+        fflush(log);
+        exit(0);
+    }
+
+    fprintf(log, "Search dir: %s \n", search_dir_name);
+    fflush(log);
 
     int x = 0;
     int (**process_file)() = malloc(MAX_PLUGINS* sizeof(void*));
