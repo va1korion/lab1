@@ -348,7 +348,7 @@ int main(int argc, char** argv) {
             case 'C':
                 fprintf(log, "option C with value '%s'\n", optarg);
                 if (strcmp(optarg, "AND") == 0)
-                    continue;
+                    argv[optind-1] = "0";
                 else if (strcmp(optarg, "OR") == 0)
                         condition = COND_OR;
                 else fprintf(stderr, "Option -C invoked with wrong arguments. Only \"AND\" and \"OR\" are supported\n");
@@ -380,9 +380,10 @@ int main(int argc, char** argv) {
 
         }
     }
-
-    for (int i = 0; i < argc; i++){
-        if(strlen(argv[i]) && argv[i][0] != '-'){
+  
+    for (int i = 1; i < argc; i++){
+        if((strcmp(argv[i], "0") != 0) && argv[i][0] != '-'){
+	    search_dir_name = malloc(strlen(argv[i]));
             strcpy(search_dir_name, argv[i]);
             break;
         }
@@ -399,7 +400,7 @@ int main(int argc, char** argv) {
                      "Only single-option plugins are currently supported \n"
                      "Then it recursively processes all the files in a directory specified in a last argument \n"
                      "*This directory MUST be specified as the LAST argument\n", version);
-        fprintf(log, "\n Could not open directory %s \n", search_dir_name);
+        fprintf(stdout, "\n Could not open directory %s \n", search_dir_name);
         fflush(log);
         exit(0);
     }
