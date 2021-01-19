@@ -119,8 +119,8 @@ int process_dir(char* dir, int (**pp_file)(const char *,
             free(fullname);
         }
 
-
     }while (local_dirent != NULL);
+    free(local_dirent);
     return 0;
 }
 

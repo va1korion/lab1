@@ -19,6 +19,15 @@ int plugin_get_info(struct plugin_info *ppi){
     return 0;
 }
 
+void munmap_handler(int err, char* buff, size_t buff_len, int errno){
+    if (err != -1){
+        return;
+    }
+    else{
+        snprintf(buff, buff_len, "Munmap failed, error %i \n", errno);
+    }
+}
+
 int plugin_process_file(const char *fname,
                         struct option *in_opts[],
                         size_t in_opts_len,
@@ -63,16 +72,16 @@ int plugin_process_file(const char *fname,
             strncpy(big_buffer+16, (char *) bytes, 16);
             for(int i = 0; i < 16; i++){
                 if (*bytes == ip_le){
-                    munmap(file_page, PAGE);
+                    munmap_handler(munmap(file_page, PAGE), out_buff, out_buff_len, errno);
                     return 0;
                 }
 
                 if (*bytes == ip_be) {
-                    munmap(file_page, PAGE);
+                    munmap_handler(munmap(file_page, PAGE), out_buff, out_buff_len, errno);
                     return 0;
                 }
                 if (strncmp(big_buffer, ip_string, strlen(ip_string)) == 0) {
-                    munmap(file_page, PAGE);
+                    munmap_handler(munmap(file_page, PAGE), out_buff, out_buff_len, errno);
                     return 0;
                 }
             }
@@ -85,21 +94,21 @@ int plugin_process_file(const char *fname,
             strncpy(buffer, (char *) bytes, 16);
 
             if (*bytes == ip_le) {
-                munmap(file_page, PAGE);
+                munmap_handler(munmap(file_page, PAGE), out_buff, out_buff_len, errno);
                 return 0;
             }
             if (*bytes == ip_be){
-                munmap(file_page, PAGE);
+                munmap_handler(munmap(file_page, PAGE), out_buff, out_buff_len, errno);
                 return 0;
             }
 
 
             if (strncmp(buffer, ip_string, strlen(ip_string)) == 0) {
-                munmap(file_page, PAGE);
+                munmap_handler(munmap(file_page, PAGE), out_buff, out_buff_len, errno);
                 return 0;
             }
         }
-        munmap(file_page, PAGE);
+        munmap_handler(munmap(file_page, PAGE), out_buff, out_buff_len, errno);
         file_offset += PAGE;
     }while(file_offset < fsize);
     return 1;
