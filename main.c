@@ -169,7 +169,7 @@ int main(int argc, char** argv) {
     longoptions[longoption_len].name = 0;
     longoptions[longoption_len].has_arg = 0;
 
-    FILE* log = stderr;
+    FILE* log = fopen("/tmp/lab1.log");
 
     opterr = 0;
     DIR* plugin_dir = opendir(plugin_dir_name);
@@ -220,11 +220,6 @@ int main(int argc, char** argv) {
         }
     }
     while (local_dirent != NULL);
-
-
-
-
-
 
 
     //looking for plugins
@@ -383,7 +378,7 @@ int main(int argc, char** argv) {
   
     for (int i = 1; i < argc; i++){
         if((strcmp(argv[i], "0") != 0) && argv[i][0] != '-'){
-	    search_dir_name = malloc(strlen(argv[i]));
+	        search_dir_name = malloc(strlen(argv[i]));
             strcpy(search_dir_name, argv[i]);
             break;
         }
@@ -395,8 +390,7 @@ int main(int argc, char** argv) {
 
     DIR* search_dir = opendir(search_dir_name);
     if(search_dir == NULL){
-        fprintf(log, "Version: %s  What help do you hope to get? \n"
-                     "This program looks for plugins in cwd (also in directory specified in -P argument) \n"
+        fprintf(log, "This program looks for plugins in cwd (also in directory specified in -P argument) \n"
                      "Only single-option plugins are currently supported \n"
                      "Then it recursively processes all the files in a directory specified in a last argument \n"
                      "*This directory MUST be specified as the LAST argument\n", version);
